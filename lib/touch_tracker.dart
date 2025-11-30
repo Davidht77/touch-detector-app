@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -39,13 +40,22 @@ class TouchTracker {
     await _methodChannel.invokeMethod('openAccessibilitySettings');
   }
 
+  Future<bool> isAccessibilityEnabled() async {
+    try {
+      final bool result = await _methodChannel.invokeMethod('isAccessibilityEnabled');
+      return result;
+    } on PlatformException {
+      return false;
+    }
+  }
+
   Future<void> startListening() async {
     _eventChannel.receiveBroadcastStream().listen((event) async {
       final data = Map<String, dynamic>.from(event as Map);
       await _saveTouch(data);
     }, onError: (e) {
       // manejar errores
-      print("Error receiving touch event: $e");
+      debugPrint("Error receiving touch event: $e");
     });
   }
 
@@ -72,4 +82,22 @@ class TouchTracker {
         ) ??
         [];
   }
+
+  Future<List<Map<String, dynamic>>> getAllTouches({String? package}) async {
+    if (package != null && package.isNotEmpty) {
+      return await _db?.query(
+            'touches',
+            where: 'package = ?',
+            whereArgs: [package],
+          ) ??
+          [];
+    }
+    return await _db?.query('touches') ?? [];
+  }
+
+  Future<List<String>> getUniquePackages() async {
+    final result = await _db?.rawQuery('SELECT DISTINCT package FROM touches');
+    return result?.map((e) => e['package'] as String).toList() ?? [];
+  }
 }
+

@@ -2,6 +2,9 @@ package com.example.flutter_application_1
 
 import android.content.Intent
 import android.provider.Settings
+import android.text.TextUtils
+import android.content.ComponentName
+import android.content.Context
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -25,6 +28,10 @@ class MainActivity: FlutterActivity() {
                         startActivity(intent)
                         result.success(null)
                     }
+                    "isAccessibilityEnabled" -> {
+                        val enabled = isAccessibilityServiceEnabled()
+                        result.success(enabled)
+                    }
                     else -> result.notImplemented()
                 }
             }
@@ -40,5 +47,25 @@ class MainActivity: FlutterActivity() {
                     TouchAccessibilityService.eventSink = null
                 }
             })
+    }
+
+    private fun isAccessibilityServiceEnabled(): Boolean {
+        val expectedComponentName = ComponentName(this, TouchAccessibilityService::class.java)
+        val enabledServicesSetting = Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return false
+
+        val colonSplitter = TextUtils.SimpleStringSplitter(':')
+        colonSplitter.setString(enabledServicesSetting)
+
+        while (colonSplitter.hasNext()) {
+            val componentNameString = colonSplitter.next()
+            val enabledComponent = ComponentName.unflattenFromString(componentNameString)
+            if (enabledComponent != null && enabledComponent == expectedComponentName) {
+                return true
+            }
+        }
+        return false
     }
 }
