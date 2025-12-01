@@ -41,6 +41,23 @@ class HeatmapPainter extends CustomPainter {
 
   Color _getColorForPackage(String package) {
     if (package.isEmpty) return Colors.red;
+
+    final String lowerPackage = package.toLowerCase();
+    if (lowerPackage.contains('instagram')) {
+      return Colors.purple;
+    } else if (lowerPackage.contains('whatsapp')) {
+      return Colors.green;
+    } else if (lowerPackage.contains('tiktok') || lowerPackage.contains('musically') || lowerPackage.contains('trill')) {
+      return Colors.black;
+    } else if (lowerPackage.contains('facebook')) {
+      return Colors.blue;
+    } else if (lowerPackage.contains('youtube')) {
+      return Colors.red;
+    } else if (lowerPackage.contains('snapchat')) {
+      return Colors.yellow;
+    } else if (lowerPackage.contains('twitter') || lowerPackage.contains('x.com')) {
+      return Colors.black; // X is black now
+    }
     
     // Usamos el hash del string para generar un color consistente
     final int hash = package.hashCode;
