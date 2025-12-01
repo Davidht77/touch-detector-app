@@ -10,6 +10,9 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.EventChannel
 
+import android.util.DisplayMetrics
+import android.view.WindowManager
+
 class MainActivity: FlutterActivity() {
 
     private val METHOD_CHANNEL = "com.heatmap.tracker/methods"
@@ -31,6 +34,12 @@ class MainActivity: FlutterActivity() {
                     "isAccessibilityEnabled" -> {
                         val enabled = isAccessibilityServiceEnabled()
                         result.success(enabled)
+                    }
+                    "getScreenResolution" -> {
+                        val metrics = DisplayMetrics()
+                        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                        windowManager.defaultDisplay.getMetrics(metrics)
+                        result.success(mapOf("width" to metrics.widthPixels, "height" to metrics.heightPixels))
                     }
                     else -> result.notImplemented()
                 }

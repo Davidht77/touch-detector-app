@@ -18,19 +18,23 @@ class HeatmapDetailScreen extends StatefulWidget {
 
 class _HeatmapDetailScreenState extends State<HeatmapDetailScreen> {
   List<Map<String, dynamic>> _points = [];
+  Size _nativeResolution = Size.zero;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadPoints();
+    _loadData();
   }
 
-  Future<void> _loadPoints() async {
+  Future<void> _loadData() async {
     final points = await widget.tracker.getAllTouches(package: widget.package);
+    final resolution = await widget.tracker.getScreenResolution();
+    
     if (mounted) {
       setState(() {
         _points = points;
+        _nativeResolution = resolution;
         _loading = false;
       });
     }
@@ -39,10 +43,13 @@ class _HeatmapDetailScreenState extends State<HeatmapDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Usamos extendBodyBehindAppBar para que el mapa ocupe toda la pantalla
+      // y las coordenadas (0,0) coincidan mejor con la esquina superior.
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.transparent,
+        title: Text(widget.package ?? 'Todas las apps'),
+        backgroundColor: Colors.black.withOpacity(0.3),
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: _loading
@@ -56,7 +63,10 @@ class _HeatmapDetailScreenState extends State<HeatmapDetailScreen> {
                       height: double.infinity,
                       color: Colors.white,
                       child: CustomPaint(
-                        painter: HeatmapPainter(_points),
+                        painter: HeatmapPainter(
+                          _points,
+                          nativeResolution: _nativeResolution,
+                        ),
                         size: Size.infinite,
                       ),
                     );

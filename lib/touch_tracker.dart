@@ -49,6 +49,18 @@ class TouchTracker {
     }
   }
 
+  Future<Size> getScreenResolution() async {
+    try {
+      final Map result = await _methodChannel.invokeMethod('getScreenResolution');
+      return Size(
+        (result['width'] as int).toDouble(),
+        (result['height'] as int).toDouble(),
+      );
+    } catch (e) {
+      return Size.zero;
+    }
+  }
+
   Future<void> startListening() async {
     _eventChannel.receiveBroadcastStream().listen((event) async {
       final data = Map<String, dynamic>.from(event as Map);

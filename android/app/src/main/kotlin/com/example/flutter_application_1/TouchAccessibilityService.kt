@@ -21,14 +21,13 @@ class TouchAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
 
         val info = AccessibilityServiceInfo().apply {
+            // Reincorporamos SCROLLED para rastrear deslizamientos.
+            // Mantenemos CLICKED, LONG_CLICKED y FOCUSED para interacciones precisas.
             eventTypes =
-                AccessibilityEvent.TYPE_TOUCH_INTERACTION_START or
                 AccessibilityEvent.TYPE_VIEW_CLICKED or
                 AccessibilityEvent.TYPE_VIEW_LONG_CLICKED or
-                AccessibilityEvent.TYPE_VIEW_SCROLLED or
                 AccessibilityEvent.TYPE_VIEW_FOCUSED or
-                AccessibilityEvent.TYPE_VIEW_SELECTED or
-                AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+                AccessibilityEvent.TYPE_VIEW_SCROLLED
 
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
             flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS or
@@ -55,9 +54,15 @@ class TouchAccessibilityService : AccessibilityService() {
             return
         }
 
-        // Coordenadas “simuladas” dentro del elemento
-        val xOffset = generateNormalOffset(width)
-        val yOffset = generateNormalOffset(height)
+        // Lógica Híbrida de Dispersión:
+        // 1. Elementos Pequeños (Botones, Iconos): Usamos Gaussiana para simular precisión en el centro.
+        // 2. Elementos Grandes (Listas, Historias, Pantalla completa): Usamos Uniforme para cubrir toda el área.
+        //    Esto evita que los toques en bordes (como pasar historias) se acumulen falsamente en el centro.
+        
+        val isLargeElement = width > 400 || height > 400
+        
+        val xOffset = if (isLargeElement) Random.nextInt(width) else generateNormalOffset(width)
+        val yOffset = if (isLargeElement) Random.nextInt(height) else generateNormalOffset(height)
 
         val x = left + xOffset
         val y = top + yOffset
@@ -82,7 +87,9 @@ class TouchAccessibilityService : AccessibilityService() {
     // Distribución normal centrada
     private fun generateNormalOffset(dimension: Int): Int {
         val mean = dimension / 2.0
-        val stdDev = dimension / 6.0
+        // Aumentamos un poco la desviación estándar (dividiendo por 4 en vez de 6)
+        // para que los puntos no estén TAN pegados al centro, pero sigan agrupados.
+        val stdDev = dimension / 4.0
 
         var value: Double
         do {
